@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+	    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.5/angular.min.js"></script>
+	    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+	    <style>
+	    	a .white {
+	    		color: white;
+	    	}
+	    	a #white {
+	    		color: white;
+	    	}
+	    </style>
+	    <title>Consumer Mobile 4G Quality Report</title>
+	</head>
+	
+	<body ng-app="myapp">
+	
+	  <div ng-controller="JiraReportController" class="container" ng-init="setProject('EQ')">
+	  
+	  <!--  	<div class="bs-example">
+			<ul class="nav nav-tabs">
+		        <li><a href="#" ng-click='setSprint("15S07 - 4G E2E")'>Sprint 15S07</a></li>
+		        <li><a href="#" ng-click='setSprint("15S08 - 4G E2E")'>Sprint 15S08</a></li>
+		        <li><a href="#" ng-click='setSprint("15S09 - 4G E2E")'>Sprint 15S09</a></li>
+			</ul>
+		</div>
+	  -->
+	  
+	  	<h2>E2E Quality Team ({{project.name}}) Quality Report </h2>
+	  	<h3>Sprint {{project.sprint}} for project {{project.id}}</h3>
+	
+	    <br/><br/><br/>
+	    
+	    <table class="table table-bordered">
+	    	<tr>
+	    	
+	    		<td> <h3>Status of Progression Stories</h3>
+	    			<table class="table table-condensed">
+	    				<tr>
+	    					<th>Status</th>
+	    					<th>Count</th>
+	    				</tr>
+	    				<tr ng-repeat="stat in filteredEpics">
+	    					<td>{{stat.type}}</td>
+	    					<td>{{stat.amount}}</td>
+	    				</tr>
+	    			</table>
+	    		</td>
+	    		
+	    		<td> <h3>Status of Regression Testing</h3>
+	    			<table class="table table-condensed" ng-init="getRegressionStatistics(item, $event)">
+	    				<tr>
+	    					<th>Status</th>
+	    					<th>Count</th>
+	    				</tr>
+	    				
+	    				<tr ng-repeat="(key, value) in RegressionStatistics track by $index">
+	    					<td>{{key}}</td>
+	    					<td>{{value}}</td>
+	    				</tr>
+	    				
+	    			</table>
+	    		</td>
+	    	
+	    	</tr>
+	    </table>
+	    
+	    <br/>
+	    
+	    <h3>Legend</h3>
+	    <table class="table">
+	    	<tr>
+	    		<td><img src="https://jira.itservices.lan/images/icons/priorities/blocker.png"> Blocker</td>
+	    		<td><img src="https://jira.itservices.lan/images/icons/priorities/critical.png"> Critical</td>
+	    		<td><img src="https://jira.itservices.lan/images/icons/priorities/major.png"> Major</td>
+	    		<td><img src="https://jira.itservices.lan/images/icons/priorities/minor.png"> Minor</td>
+	    		<td><img src="https://jira.itservices.lan/images/icons/priorities/trivial.png"> Trivial</td>
+	    	</tr>
+	    </table>
+	    
+	    <br/>
+	    
+	    <h2 ng-init="getEpicsDefectInfo(item, $event)">Progression</h2>
+	    <h4>Here is the status of Epics that have been tested End to End, and the impact of the Defects associated to the same.</h4>
+	    
+	    <table class="table table-striped">
+	    	<tr>
+	    		<th>Key</th>
+	    		<th>Summary</th>
+	    		<th>Impact of Open Defects</th>
+	    		<th>Status</th>
+	    	</tr>
+	    	<tr ng-repeat="epic in Epics">
+	    		<td><a target="_new" href="https://jira.itservices.lan/browse/{{epic.issueKey}}">{{epic.issueKey}}</a></td>
+	    		<td>{{epic.issueSummary}}</td>
+	    		<td>
+	    			<table class="table">
+	    				<tr ng-show="epic.issueDefects.length > 0">
+	    					<th>Impact</th>
+	    					<th>Application</th>
+	    				</tr>
+	    				<tr ng-repeat="defect in epic.issueDefects| toArray| orderBy:'defectPriorityNumber'">
+	    					<td><img ng-src={{defect.defectPriorityUrl}}>
+	    				<a target="_new" href="https://jira.itservices.lan/browse/{{defect.defectKey}}">{{defect.defectKey}}</a> 
+	    				- {{defect.defectImpact}}</td>
+	    					<td>{{defect.defectApplication}}</td>
+	    				</tr>
+	    			</table>
+	    		</td>
+	    		<td>{{epic.issueStatus}}</td>
+	    	</tr>
+	    </table>
+	    
+	    
+	    <br/><br/>
+	    
+	    
+	    
+	    <h2 ng-init="getRegressionTestCasesInfo(item, $event)">Regression Test Cases</h2>
+	    <h4>Here is the staus of all Regression Test Cases.</h4>
+	    <table class="table table-striped" ng-repeat="epic in RegressionTestCases">
+	    	<tr>
+	    		<th>Key</th>
+	    		<th>Test Case Summary</th>
+	    		<th>Progress (%)</th>
+	    		<th>Status</th>
+	    	</tr>
+	    	
+	    	<tr ng-repeat="defect in epic.issueDefects" ng-class="{success: defect.defectStatus == 'Pass', warning: defect.defectStatus == 'Blocked'}">
+	    		<td><a target="_new" href="https://jira.itservices.lan/browse/{{defect.defectKey}}">{{defect.defectKey}}</a></td>
+	    		<td>{{defect.defectSummary}}</td>
+	    		<td>{{defect.defectPercentageComplete}}</td>
+	    		<td>{{defect.defectStatus}}</td>
+	    		
+	    	</tr>
+	    </table>
+	    
+	    
+	    <br/><br/>
+	    
+	    
+	    <h2 ng-init="getRegressionDefectInfo(item, $event)">Regression Defects</h2>
+	    <h4>Here is the list and impact of all other Defects.</h4>
+	    <table class="table  table-striped" >
+	    	<tr>
+	    		<th>Key</th>
+	    		<th>Summary</th>
+	    		<th>Impact of Open Defects</th>
+	    		<!-- <th>Status</th> -->
+	    	</tr>
+	    	<tr ng-repeat="epic in Regression">
+	    		<td><a target="_new" href="https://jira.itservices.lan/browse/{{epic.issueKey}}">{{epic.issueKey}}</a></td>
+	    		<td>{{epic.issueSummary}}</td>
+	    		<td>
+	    			<table class="table">
+	    				<tr ng-show="epic.issueDefects.length > 0">
+	    					<th>Impact</th>
+	    					<th>Application</th>
+	    				</tr>
+	    				<tr ng-repeat="defect in epic.issueDefects| toArray| orderBy:'defectPriorityNumber'">
+	    					<td><img ng-src={{defect.defectPriorityUrl}}>
+	    				<a target="_new" href="https://jira.itservices.lan/browse/{{defect.defectKey}}">{{defect.defectKey}}</a> 
+	    				- {{defect.defectImpact}}</td>
+	    					<td>{{defect.defectApplication}}</td>
+	    				</tr>
+	    			</table>
+	    		</td>
+	    		<!-- <td>{{epic.issueStatus}}</td> -->
+	    	</tr>
+	    </table>
+	
+	  	<div class="col-md-4 col-md-offset-4">
+	  		Powered by
+	  		<a href="http://php.net/"><img src="images/php.png" width="64" height="64" /></a> 
+	  		<a href="https://angularjs.org/"><img src="images/angularjs.png" width="88" height="64" /></a>
+	  		
+	  	</div>
+	  	<div class="col-md-4">&nbsp;</div>
+	
+		<div class="col-md-2 col-md-offset-5">
+	 		<a class="white" href="mailto:NL-IT-Comm-4GE2EQuality@Tele2.com; 4G-NL-story-owners <4G-NL-story-owners@tele2.onmicrosoft.com>; erik.kroon@tele2.com; joost.braakman@tele2.com; michel.adrichem@tele2.com; geralt.schepers@tele2.com; mark.wickel@tele2.com; john.goes@tele2.com; boudewijn.tenhorn@tele2.com; coen.de-ruwe@tele2.com; erwin.poeran@tele2.com; gerard.denheeten@tele2.com; jan.hage@tele2.com; marcel.veldhuizen@tele2.com; nabil.lechkar@tele2.com; redjesh.chedi@tele2.com; ritchie.riekerk@tele2.com; robbert.broekhoven@tele2.com; ronald.vandermark@tele2.com; wikje.zelisse@tele2.com; erik.kroon@tele2.com; joost.braakman@tele2.com; sander.vanwissen@tele2.com; mercy.vanderaa@tele2.com; thijs.pepping@tele2.com; AMS-Application-Mngt@tele2.onmicrosoft.com?cc=franc.klomp@tele2.com;bas.klijsen@tele2.com;chris.toller@tele2.com&subject=Consumer Mobile 4G End to End Testing : Progress report&body=All,%0D%0A%0D%0AThe Consumer Mobile 4G End to End Testing Report can now be obtained online from the following location%0D%0Ahttp://iup-itcmtools01/php/jira/ %0D%0A%0D%0AYou need to refresh the page (F5, or Ctrl+R) to reload the information.%0D%0A%0D%0APlease let me know if you need more information.">Send Email</a>
+	 	</div>
+	 	
+	 	<script src="scripts/controller.js"></script>
+	  
+	  </div>
+	  
+	</body>
+	    
+</html>
